@@ -57,7 +57,7 @@ Before running the project, make sure you have the following installed:
    Navigate to the `static` folder and run:
 
    ```bash
-   npm i
+   npm install -D tailwindcss
    ```
 
    Then configure your Tailwind CSS setup in the `tailwind.config.js` file.
