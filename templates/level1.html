@@ -8,76 +8,76 @@
     <title>Jogo</title>
     <link rel="stylesheet" href="static/css/style.css">
     <link rel="shortcut icon" href="static/images/Mario-ico.ico" type="image/x-icon">
-  
+
 </head>
 
 <style>
-    *{
-    margin: 0;
-    padding: 0;
-    box-sizing: 0;
-}
-
-.jump{
-    animation: personagem-animation 500ms ease-out;
-}
-
-@keyframes pipe-animations {
-    from{
-        right: -80px;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: 0;
     }
 
-    to{
-        right: 100%;
-    }
-}
-
-@keyframes personagem-animation{
-    0%{
-        bottom: 0;
+    .jump {
+        animation: personagem-animation 500ms ease-out;
     }
 
-    40%{
-        bottom: 120px
+    @keyframes pipe-animations {
+        from {
+            right: -80px;
+        }
+
+        to {
+            right: 100%;
+        }
     }
 
-    50%{
-        bottom: 120px;
+    @keyframes personagem-animation {
+        0% {
+            bottom: 0;
+        }
+
+        40% {
+            bottom: 120px
+        }
+
+        50% {
+            bottom: 120px;
+        }
+
+        60% {
+            bottom: 120px
+        }
+
+        100% {
+            bottom: 0px
+        }
     }
 
-    60%{
-        bottom: 120px
+    @keyframes cloud {
+        from {
+            right: -550px;
+        }
+
+        to {
+            right: 100%
+        }
     }
 
-    100%{
-        bottom: 0px
-    }
-}
+    @media (max-width: 620px) {
+        .mario {
+            width: 110px;
+            position: absolute;
+            bottom: 0px;
+        }
 
-@keyframes cloud {
-    from{
-        right: -550px;
+        .pipe {
+            position: absolute;
+            bottom: 0;
+            width: 50px;
+            animation: pipe-animations 1s infinite linear;
+        }
     }
-
-    to{
-        right: 100%
-    }
-}
-
-@media (max-width: 620px){
-    .mario{
-        width: 110px;
-        position: absolute;
-        bottom: 0px;
-    }
-
-    .pipe{
-        position: absolute;
-        bottom: 0;
-        width: 50px;
-        animation: pipe-animations 1s infinite linear;
-    }
-}
 </style>
 
 <body>
