@@ -13,7 +13,7 @@ Welcome to the Game Project! This is a simple game built using HTML, CSS, Tailwi
 
 ## Features
 
-- 5 different levels to play
+- 2 different levels to play
 - Collectible items and obstacles
 - Beautiful user interface with Tailwind CSS
 - Sound effects and background music
@@ -42,7 +42,6 @@ Before running the project, make sure you have the following installed:
    Create a `requirements.txt` file in the project root directory and add the following:
 
    ```plaintext
-   pygame
    Flask
    ```
 
@@ -109,17 +108,6 @@ game_project/
     ├── level3.html
     ├── level4.html
     └── level5.html
-│
-└── pygame_game/             # Pygame files
-    ├── main.py
-    ├── settings.py
-    ├── assets.py
-    ├── game_functions.py
-    ├── level1.py
-    ├── level2.py
-    ├── level3.py
-    ├── level4.py
-    └── level5.py
 ```
 
 Feel free to reach out if you have any questions or need further assistance!

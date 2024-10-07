@@ -3,14 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/css/nes.min.css">
     <title>Level 2</title>
-    <link href="/static/css/style.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="static/css/input.css">
+    <style>
+        @keyframes jump {
+            0%, 100% { bottom: 80px; }
+            50% { bottom: 150px; }
+        }
+
+        .jumping {
+            animation: jump 0.5s ease;
+        }
+        
+        @keyframes moveClouds {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .clouds {
+            animation: moveClouds 30s linear infinite;
+        }
+
+    </style>
 </head>
-<body class="bg-yellow-100">
-    <div class="container mx-auto text-center">
-        <h1 class="text-3xl font-bold mt-10">Level 2</h1>
-        <p class="mt-4">Avoid the obstacles!</p>
-        <button onclick="location.href='/level3'" class="bg-blue-500 text-white px-4 py-2 rounded mt-4">Next Level</button>
+<body class="bg-blue-200">
+    <div id="game-board" class="w-full h-screen relative overflow-hidden bg-[url('static/images/africa.jpg')] bg-repeat-x bg-cover">
+        <div class="absolute left-0 right-0 flex justify-between px-8
+        top-[50px] whitespace-nowrap clouds">
+            <img src="static/images/clouds.png" class="w-[500px] inline-block mr-[50px] cloud">
+            <img src="static/images/clouds.png" class="w-[500px] inline-block mr-[50px] cloud">
+            <img src="static/images/clouds.png" class="w-[500px] inline-block mr-[50px] cloud">
+        </div>
+        <img src="static/images/mario.gif" id="mario" class="w-[130px] absolute bottom-[40px] left-[50px]">
+        <div class="absolute bottom-0 w-full h-10 bg-gradient-to-t from-yellow-300 to-yellow-700"></div>
     </div>
+
+    <div id="question-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center px-4">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full">
+            <h2 id="question-text" class="text-xl font-bold mb-4"></h2>
+            <div id="answers" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <div id="congrats-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center px-4">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full text-center">
+            <h2 class="text-2xl font-bold mb-4">Congratulations!</h2>
+            <p class="mb-6">You successfully completed all the questions!</p>
+            <button id="next-level-btn" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                Next Level
+            </button>
+        </div>
+    </div>
+
+    <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center px-4">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full text-center">
+            <h2 class="text-2xl font-bold mb-4">Game Over</h2>
+            <p class="mb-6">You missed all the questions in this sequence.</p>
+            <button id="restart-btn" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                Restart Level
+            </button>
+        </div>
+    </div>
+
+    <audio id="background-music">
+        <source src="static/sounds/background-level3.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="correct-sound">
+        <source src="static/sounds/resposta-correta.wav" type="audio/mpeg">
+    </audio>
+    <audio id="game-over-sound">
+        <source src="static/sounds/game-over.wav" type="audio/mpeg">
+    </audio>
+    <audio id="level-complete-sound">
+        <source src="static/sounds/passou-fase.wav" type="audio/mpeg">
+    </audio> 
+
+    <script>
+        const mario = document.getElementById('mario');
+        const questionModal = document.getElementById('question-modal');
+        const questionText = document.getElementById('question-text');
+        const answersContainer = document.getElementById('answers');
+        const congratsModal = document.getElementById('congrats-modal');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const nextLevelBtn = document.getElementById('next-level-btn');
+        const restartBtn = document.getElementById('restart-btn');
+
+        const backgroundMusic = document.getElementById('background-music');
+        const correctSound = document.getElementById('correct-sound');
+        const gameOverSound = document.getElementById('game-over-sound');
+        const levelCompleteSound = document.getElementById('level-complete-sound');
+
+        let currentQuestionSet = 0;
+        let currentQuestion = 0;
+        let score = 0;
+        let totalScore = 0;
+        let marioPosition = 50;
+        let isJumping = false;
+
+        const questions = [
+    [
+        {
+            question: "What is one of the primary causes of increased droughts in Africa due to climate change?",
+            answers: ["Overpopulation", "Rising global temperatures", "Increased rainfall", "Industrial pollution"],
+            correct: 1
+        },
+        {
+            question: "How is climate change affecting agriculture in Sub-Saharan Africa?",
+            answers: ["Increased crop yields", "Decreased food production due to droughts", "Expansion of forested areas", "More frequent floods helping crops"],
+            correct: 1
+        },
+        {
+            question: "Which African region is most vulnerable to rising sea levels caused by global warming?",
+            answers: ["Central Africa", "Southern Africa", "West Africa", "North Africa"],
+            correct: 2
+        }
+    ],
+    [
+        {
+            question: "What impact does global warming have on wildlife in African savannas?",
+            answers: ["Increased species migration", "Expansion of animal habitats", "No significant changes", "Reduction in water sources affecting wildlife"],
+            correct: 3
+        },
+        {
+            question: "Which African country is taking significant steps towards adopting renewable energy to combat climate change?",
+            answers: ["Nigeria", "South Africa", "Kenya", "Egypt"],
+            correct: 2
+        },
+        {
+            question: "How has climate change affected rainfall patterns in East Africa?",
+            answers: ["More consistent rainfall", "Increased seasonal droughts", "Frequent cyclones", "No noticeable impact"],
+            correct: 1
+        }
+    ],
+    [
+        {
+            question: "Which African country is highly vulnerable to desertification due to climate change?",
+            answers: ["Morocco", "Somalia", "South Africa", "Ghana"],
+            correct: 1
+        },
+        {
+            question: "What is one of the key challenges posed by rising temperatures in Africa?",
+            answers: ["More agricultural productivity", "Decline in water resources", "Better infrastructure development", "More tourism"],
+            correct: 1
+        },
+        {
+            question: "What type of energy is being promoted to reduce carbon emissions in Africa?",
+            answers: ["Fossil fuels", "Nuclear energy", "Hydroelectric and solar energy", "Coal"],
+            correct: 2
+        }
+    ]
+];
+
+        function startBackgroundMusic() {
+            backgroundMusic.play().catch(error => console.log("Audio play failed:", error));
+        }
+
+        function showQuestion() {
+            const currentSet = questions[currentQuestionSet];
+            if (currentQuestion >= currentSet.length) {
+                if (score === 0 || totalScore === 0) {
+                    showGameOverModal();
+                    return;
+                }
+                currentQuestionSet++;
+                currentQuestion = 0;
+                score = 0;
+                if (currentQuestionSet >= questions.length && totalScore > 0) {
+                    showCongratsModal();
+                    return;
+                }
+            }
+
+            const q = currentSet[currentQuestion];
+            questionText.textContent = q.question;
+            answersContainer.innerHTML = '';
+
+            q.answers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.textContent = answer;
+                button.className = 'w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600';
+                button.onclick = () => checkAnswer(index);
+                answersContainer.appendChild(button);
+            });
+
+            questionModal.classList.remove('hidden');
+        }
+
+        function checkAnswer(answerIndex) {
+            const currentSet = questions[currentQuestionSet];
+            const q = currentSet[currentQuestion];
+
+            if (answerIndex === q.correct) {
+                score++;
+                totalScore++;
+                correctSound.play();
+            }
+
+            currentQuestion++;
+            questionModal.classList.add('hidden');
+
+            if (currentQuestion >= currentSet.length) {
+                setTimeout(showQuestion, 3000);
+            } else {
+                setTimeout(showQuestion, 100);
+            }
+        }
+
+        function resetGame() {
+            currentQuestionSet = 0;
+            currentQuestion = 0;
+            score = 0;
+            totalScore = 0;
+            marioPosition = 50;
+            mario.style.left = '50px';
+            gameOverModal.classList.add('hidden');
+            setTimeout(showQuestion, 3000);
+        }
+
+        function showCongratsModal() {
+            congratsModal.classList.remove('hidden');
+            backgroundMusic.pause();
+            levelCompleteSound.play();
+        }
+
+        function showGameOverModal() {
+            gameOverModal.classList.remove('hidden');
+            backgroundMusic.pause();
+            gameOverSound.play();
+        }
+
+        function animateMario() {
+            setInterval(() => {
+                marioPosition += 3;
+                if (marioPosition > window.innerWidth && totalScore > 0) {
+                    showCongratsModal();
+                    return;
+                } else if(marioPosition > window.innerWidth) {
+                    showGameOverModal();
+                    return;
+                }
+                mario.style.left = `${marioPosition}px`;
+            }, 50);
+        }
+
+        function jump() {
+            if (!isJumping) {
+                isJumping = true;
+                mario.classList.add('jumping');
+                setTimeout(() => {
+                    mario.classList.remove('jumping');
+                    isJumping = false;
+                }, 500);
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                jump();
+            }
+        });
+
+        document.addEventListener('touchstart', jump);
+
+        nextLevelBtn.addEventListener('click', () => {
+            window.location.href = '/level4';
+        });
+
+        restartBtn.addEventListener('click', () => {
+            resetGame();
+            startBackgroundMusic();
+        });
+
+        animateMario();
+        startBackgroundMusic();
+        setTimeout(showQuestion, 3000);
+    </script>
 </body>
 </html>

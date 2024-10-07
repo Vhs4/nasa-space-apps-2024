@@ -4,7 +4,6 @@ module.exports = {
   theme: {
     extend: {
       backgroundImage: {
-        'level1': "url(/static/images/europa.jpg)",
       },
       animation: {
         'pipe-level1': 'pipe-animations 1.5s infinite linear',

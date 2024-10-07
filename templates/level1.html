@@ -1,196 +1,284 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo</title>
-    <link rel="stylesheet" href="static/css/style.css">
-    <link rel="shortcut icon" href="static/images/Mario-ico.ico" type="image/x-icon">
+    <link rel="stylesheet" href="static/css/nes.min.css">
+    <title>Level 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="static/css/input.css">
+    <style>
+        @keyframes jump {
+            0%, 100% { bottom: 80px; }
+            50% { bottom: 150px; }
+        }
 
+        .jumping {
+            animation: jump 0.5s ease;
+        }
+        
+        @keyframes moveClouds {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .clouds {
+            animation: moveClouds 30s linear infinite;
+        }
+
+    </style>
 </head>
-
-<style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: 0;
-    }
-
-    .jump {
-        animation: personagem-animation 500ms ease-out;
-    }
-
-    @keyframes pipe-animations {
-        from {
-            right: -80px;
-        }
-
-        to {
-            right: 100%;
-        }
-    }
-
-    @keyframes personagem-animation {
-        0% {
-            bottom: 0;
-        }
-
-        40% {
-            bottom: 120px
-        }
-
-        50% {
-            bottom: 120px;
-        }
-
-        60% {
-            bottom: 120px
-        }
-
-        100% {
-            bottom: 0px
-        }
-    }
-
-    @keyframes cloud {
-        from {
-            right: -550px;
-        }
-
-        to {
-            right: 100%
-        }
-    }
-
-    @media (max-width: 620px) {
-        .mario {
-            width: 110px;
-            position: absolute;
-            bottom: 0px;
-        }
-
-        .pipe {
-            position: absolute;
-            bottom: 0;
-            width: 50px;
-            animation: pipe-animations 1s infinite linear;
-        }
-    }
-</style>
-
-<body>
-
-    <div class="game-board w-full h-screen border-b-[50px] border-solid border-green-700
-    mx-auto my-0 relative overflow-hidden bg-level1">
-        <img src="static/images/clouds.png" class="cloud w-[500px] absolute animate-cloud-level1">
-        <img src="static/images/mario.gif" class="mario w-[130px] absolute bottom-0">
-        <img src="static/images/pipe.png" class="pipe absolute bottom-0 w-[60px]
-        animate-pipe-level1">
-
+<body class="bg-blue-200">
+    <div id="game-board" class="w-full h-screen relative overflow-hidden bg-[url('static/images/europa.jpg')] bg-repeat-x bg-cover">
+        <div class="absolute left-0 right-0 flex justify-between px-8
+        top-[50px] whitespace-nowrap clouds">
+            <img src="static/images/clouds.png" class="w-[500px] inline-block mr-[50px] cloud">
+            <img src="static/images/clouds.png" class="w-[500px] inline-block mr-[50px] cloud">
+            <img src="static/images/clouds.png" class="w-[500px] inline-block mr-[50px] cloud">
+        </div>
+        <img src="static/images/mario.gif" id="mario" class="w-[130px] absolute bottom-[80px] left-[50px]">
+        <div class="absolute bottom-0 w-full h-20 bg-gradient-to-t from-yellow-300 to-yellow-700"></div>
     </div>
 
-    <div class="game-over invisible flex fixed top-0 right-0 left-0 bottom-0
-    justify-center items-center bg-[#4139395d]">
-        <button class="restart h-[60px] w-[350px] rounded-[10px] border-none
-        cursor-pointer bg-[#0000ff] text-white font-semibold">REINICIAR</button>
+    <div id="question-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center px-4">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full">
+            <h2 id="question-text" class="text-xl font-bold mb-4"></h2>
+            <div id="answers" class="space-y-2"></div>
+        </div>
     </div>
+
+    <div id="congrats-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center px-4">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full text-center">
+            <h2 class="text-2xl font-bold mb-4">Congratulations!</h2>
+            <p class="mb-6">You successfully completed all the questions!</p>
+            <button id="next-level-btn" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                Next Level
+            </button>
+        </div>
+    </div>
+
+    <div id="game-over-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center px-4">
+        <div class="bg-white p-8 rounded-lg max-w-md w-full text-center">
+            <h2 class="text-2xl font-bold mb-4">Game Over</h2>
+            <p class="mb-6">You missed all the questions in this sequence.</p>
+            <button id="restart-btn" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                Restart Level
+            </button>
+        </div>
+    </div>
+
+    <audio id="background-music">
+        <source src="static/sounds/background-level3.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="correct-sound">
+        <source src="static/sounds/resposta-correta.wav" type="audio/mpeg">
+    </audio>
+    <audio id="game-over-sound">
+        <source src="static/sounds/game-over.wav" type="audio/mpeg">
+    </audio>
+    <audio id="level-complete-sound">
+        <source src="static/sounds/passou-fase.wav" type="audio/mpeg">
+    </audio> 
 
     <script>
-        const mario = document.querySelector('.mario');
-        const pipe = document.querySelector('.pipe');
-        const cloud = document.querySelector('.cloud');
+        const mario = document.getElementById('mario');
+        const questionModal = document.getElementById('question-modal');
+        const questionText = document.getElementById('question-text');
+        const answersContainer = document.getElementById('answers');
+        const congratsModal = document.getElementById('congrats-modal');
+        const gameOverModal = document.getElementById('game-over-modal');
+        const nextLevelBtn = document.getElementById('next-level-btn');
+        const restartBtn = document.getElementById('restart-btn');
 
-        const gameOver = document.querySelector('.game-over');
-        const restartButton = document.querySelector('.restart');
+        const backgroundMusic = document.getElementById('background-music');
+        const correctSound = document.getElementById('correct-sound');
+        const gameOverSound = document.getElementById('game-over-sound');
+        const levelCompleteSound = document.getElementById('level-complete-sound');
 
-        const jump = () => {
+        let currentQuestionSet = 0;
+        let currentQuestion = 0;
+        let score = 0;
+        let totalScore = 0;
+        let marioPosition = 50;
+        let isJumping = false;
 
-            mario.classList.add('jump');
-
-            setTimeout(() => {
-
-                mario.classList.remove('jump');
-
-            }, 500);
-        }
-
-        const loop = setInterval(() => {
-
-            const pipePosition = pipe.offsetLeft;
-            const marioPosition = +window.getComputedStyle(mario).bottom.replace('px', '');
-            const cloudPosition = +window.getComputedStyle(cloud).left.replace('px', '');
-
-            if (pipePosition <= 100 && pipePosition > 0 && marioPosition < 60) {
-
-                pipe.style.animation = 'none';
-                pipe.style.left = `${pipePosition}px`;
-
-                mario.style.animation = 'none';
-                mario.style.bottom = `${marioPosition}px`;
-
-                mario.src = 'static/images/game-over.png';
-                mario.style.width = '70px';
-                mario.style.marginLeft = '35px';
-
-                cloud.style.animation = 'cloud 20s infinite linear';
-                cloud.style.left = `${cloudPosition}px`;
-
-                gameOver.style.visibility = 'visible';
-
-                clearInterval(loop);
-            }
-        }, 10);
-
-        const restart = () => {
-
-            gameOver.style.visibility = 'hidden';
-
-            pipe.style.animation = 'pipe-animations 1.5s infinite linear';
-            pipe.style.left = ``;
-
-            mario.src = 'static/images/mario.gif';
-            mario.style.width = '130px';
-            mario.style.bottom = '0px';
-            mario.style.marginLeft = '';
-            mario.style.animation = '';
-
-            cloud.style.left = ``;
-
-            const loop = setInterval(() => {
-
-                const pipePosition = pipe.offsetLeft;
-                const marioPosition = +window.getComputedStyle(mario).bottom.replace('px', '');
-                const cloudPosition = +window.getComputedStyle(cloud).left.replace('px', '');
-
-                if (pipePosition <= 100 && pipePosition > 0 && marioPosition < 60) {
-
-                    pipe.style.animation = 'none';
-                    pipe.style.left = `${pipePosition}px`;
-
-                    mario.style.animation = 'none';
-                    mario.style.bottom = `${marioPosition}px`;
-
-                    mario.src = 'static/images/game-over.png';
-                    mario.style.width = '70px';
-                    mario.style.marginLeft = '35px';
-
-                    cloud.style.animation = 'cloud 20s infinite linear';
-                    cloud.style.left = `${cloudPosition}px`;
-
-                    gameOver.style.visibility = 'visible';
-
-                    clearInterval(loop);
+        const questions = [
+            [
+                {
+                    question: "What is causing the melting of glaciers in the European Alps?",
+                    answers: ["Increased use of nuclear energy", "Changes in wind patterns", "Rising global temperatures", "Population decrease in mountain regions"],
+                    correct: 2
+                },
+                {
+                    question: "What is one of the main outcomes of increased heatwaves in Europe?",
+                    answers: ["Expansion of ice cover", "Increase in heat-related deaths", "Reduction in solar energy production", "Growth in fish populations"],
+                    correct: 1
+                },
+                {
+                    question: "What has led to more frequent flooding in Central Europe?",
+                    answers: ["Increased rainfall and glacier melt", "Agricultural expansion", "Deforestation in mountain areas", "Increased road construction"],
+                    correct: 0
                 }
-            }, 10);
+            ],
+            [
+                {
+                    question: "What are the projected impacts of climate change on biodiversity in Europe?",
+                    answers: ["Increased species diversity", "Decline of certain species", "No impact", "Increased marine life"],
+                    correct: 1
+                },
+                {
+                    question: "Which European country is most vulnerable to rising sea levels?",
+                    answers: ["Germany", "Sweden", "Netherlands", "Austria"],
+                    correct: 2
+                },
+                {
+                    question: "What phenomenon is becoming more common in Southern Europe due to climate change?",
+                    answers: ["Heavy snowfall", "Severe droughts", "Frost events", "Hurricane activity"],
+                    correct: 1
+                }
+            ],
+            [
+                {
+                    question: "Which of the following is a major contributor to greenhouse gas emissions in Europe?",
+                    answers: ["Agricultural practices", "Public transportation", "Household recycling", "Wind energy production"],
+                    correct: 0
+                },
+                {
+                    question: "What is the European Union's target for carbon neutrality by?",
+                    answers: ["2030", "2040", "2050", "2060"],
+                    correct: 2
+                },
+                {
+                    question: "What type of energy is being increasingly adopted in Europe to combat climate change?",
+                    answers: ["Coal", "Oil", "Natural gas", "Renewable energy"],
+                    correct: 3
+                }
+            ]
+        ];
+
+        function startBackgroundMusic() {
+            backgroundMusic.play().catch(error => console.log("Audio play failed:", error));
         }
 
-        document.addEventListener('keydown', jump);
+        function showQuestion() {
+            const currentSet = questions[currentQuestionSet];
+            if (currentQuestion >= currentSet.length) {
+                if (score === 0 || totalScore === 0) {
+                    showGameOverModal();
+                    return;
+                }
+                currentQuestionSet++;
+                currentQuestion = 0;
+                score = 0;
+                if (currentQuestionSet >= questions.length && totalScore > 0) {
+                    showCongratsModal();
+                    return;
+                }
+            }
+
+            const q = currentSet[currentQuestion];
+            questionText.textContent = q.question;
+            answersContainer.innerHTML = '';
+
+            q.answers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.textContent = answer;
+                button.className = 'w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600';
+                button.onclick = () => checkAnswer(index);
+                answersContainer.appendChild(button);
+            });
+
+            questionModal.classList.remove('hidden');
+        }
+
+        function checkAnswer(answerIndex) {
+            const currentSet = questions[currentQuestionSet];
+            const q = currentSet[currentQuestion];
+
+            if (answerIndex === q.correct) {
+                score++;
+                totalScore++;
+                correctSound.play();
+            }
+
+            currentQuestion++;
+            questionModal.classList.add('hidden');
+
+            if (currentQuestion >= currentSet.length) {
+                setTimeout(showQuestion, 3000);
+            } else {
+                setTimeout(showQuestion, 100);
+            }
+        }
+
+        function resetGame() {
+            currentQuestionSet = 0;
+            currentQuestion = 0;
+            score = 0;
+            totalScore = 0;
+            marioPosition = 50;
+            mario.style.left = '50px';
+            gameOverModal.classList.add('hidden');
+            setTimeout(showQuestion, 3000);
+        }
+
+        function showCongratsModal() {
+            congratsModal.classList.remove('hidden');
+            backgroundMusic.pause();
+            levelCompleteSound.play();
+        }
+
+        function showGameOverModal() {
+            gameOverModal.classList.remove('hidden');
+            backgroundMusic.pause();
+            gameOverSound.play();
+        }
+
+        function animateMario() {
+            setInterval(() => {
+                marioPosition += 3;
+                if (marioPosition > window.innerWidth && totalScore > 0) {
+                    showCongratsModal();
+                    return;
+                } else if(marioPosition > window.innerWidth) {
+                    showGameOverModal();
+                    return;
+                }
+                mario.style.left = `${marioPosition}px`;
+            }, 50);
+        }
+
+        function jump() {
+            if (!isJumping) {
+                isJumping = true;
+                mario.classList.add('jumping');
+                setTimeout(() => {
+                    mario.classList.remove('jumping');
+                    isJumping = false;
+                }, 500);
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                jump();
+            }
+        });
+
         document.addEventListener('touchstart', jump);
 
-        restartButton.addEventListener('click', restart);
+        nextLevelBtn.addEventListener('click', () => {
+            window.location.href = '/level2';
+        });
+
+        restartBtn.addEventListener('click', () => {
+            resetGame();
+            startBackgroundMusic();
+        });
+
+        animateMario();
+        startBackgroundMusic();
+        setTimeout(showQuestion, 3000);
     </script>
 </body>
-
 </html>
